@@ -1,4 +1,6 @@
 import React, { Fragment } from 'react'
+import { connect } from 'react-redux'
+import { actions } from '../actions'
 // @material-ui
 import PropTypes from 'prop-types'
 import Grid from '@material-ui/core/Grid/Grid'
@@ -13,7 +15,8 @@ import TransactionWidget from '../Transaction/Widget'
 
 const styles = theme => ({
   container: {
-    paddingLeft:  theme.spacing.unit * 5,
+    paddingLeft: theme.spacing.unit * 5,
+    paddingRight: theme.spacing.unit * 5,
     marginTop: theme.spacing.unit * 10,
   },
   gridItem: {
@@ -22,6 +25,11 @@ const styles = theme => ({
 })
 
 class Home extends React.Component {
+  componentDidMount () {
+    this.props.dispatch(actions.account.loadAll())
+    this.props.dispatch(actions.transaction.loadAll())
+  }
+
   render () {
     const {classes} = this.props
     return (
@@ -45,4 +53,4 @@ class Home extends React.Component {
 Home.propTypes = {
   classes: PropTypes.object.isRequired,
 }
-export default withStyles(styles)(Home)
+export default connect()(withStyles(styles)(Home))

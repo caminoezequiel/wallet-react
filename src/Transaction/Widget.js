@@ -1,7 +1,9 @@
 import React from 'react'
+import { connect } from 'react-redux'
+import { actions } from './actions'
+
+// Components
 import List from './Component/List'
-import Service from './Service'
-import Transaction from './Model/Transaction'
 import Form from './Component/Form'
 // @material-ui
 import Grid from '@material-ui/core/Grid'
@@ -9,94 +11,58 @@ import Typography from '@material-ui/core/Typography'
 import IconButton from '@material-ui/core/IconButton'
 import AddIcon from '@material-ui/icons/Add'
 
-export default class Widget extends React.Component {
-  constructor (props) {
-    super(props)
-    this.state = {
-      showForm: false,
-      entities: []
-    }
-  }
+const mapStateToProps = state => ({
+  entity: state.transaction.entity,
+  showForm: state.transaction.showForm,
+  entities: state.transaction.entities
+})
 
-  componentDidMount () {
-    Service.retrieve().then(entities => {
-      this.setState({entities: entities})
-    })
-  }
-
+class Widget extends React.Component {
   handleListClick = (action, itemId) => {
     if (action === 'delete') {
-      this.delete(itemId)
+      this.props.dispatch(actions.deleteTransaction(itemId))
     }
     if (action === 'edit') {
-      let entity = this.state.entities.find(e => e._id === itemId)
-      this.setState({
-        entity: new Transaction(entity._id, entity.type, entity.amount, entity.account._id || entity.account, entity.category, entity.datetime),
-        showForm: true
-      })
+      this.props.dispatch(actions.showForm(itemId))
     }
   }
 
   handleAddClick = () => {
-    this.setState({entity: new Transaction(), showForm: true})
+    this.props.dispatch(actions.showForm(null))
   }
 
   handleForm = (action, values) => {
     if (action === 'cancel') {
-      this.setState({entity: null, showForm: false})
+      this.props.dispatch(actions.hideForm())
     }
-    if (action === 'create' || action === 'edit') {
-      this[action](values)
+    if (action === 'create') {
+      this.props.dispatch(actions.createTransaction(values))
     }
-  }
-
-  create = (values) => {
-    Service.create(values).then(entity => {
-      this.setState({
-        entity: null,
-        showForm: false,
-        entities: [...this.state.entities, entity]
-      })
-    })
-  }
-
-  edit = (values) => {
-    let id = this.state.entity._id
-    Service.update(id, values).then(entity => {
-      this.setState({
-        entity: null,
-        showForm: false,
-        entities: this.state.entities.map(e => (e._id === id) ? entity : e)
-      })
-    })
-  }
-
-  delete = (id) => {
-    Service.remove(id).then(wasSuccess => {
-      if (wasSuccess) {
-        this.setState({
-          entities: this.state.entities.filter(e => e._id !== id)
-        })
-      }
-    })
+    if (action === 'edit') {
+      let id = this.props.entity._id
+      this.props.dispatch(actions.updateTransaction(id, values))
+    }
   }
 
   render () {
+    const {showForm, entity, entities} = this.props
     return (
       <Grid container direction="column">
         <Typography component="h2" variant="h5">
           Transactions
-          {!this.state.showForm && (
+          {!showForm && (
             <IconButton type="button" variant="contained" color="secondary" onClick={this.handleAddClick}>
               <AddIcon/>
             </IconButton>
           )}
         </Typography>
         <Grid container>
-          {this.state.showForm && <Form entity={this.state.entity} onEvent={this.handleForm}/>}
-          {!this.state.showForm && <List transactions={this.state.entities} onClick={this.handleListClick}/>}
+          {showForm && <Form entity={entity} onEvent={this.handleForm}/>}
+          {!showForm && <List transactions={entities} onClick={this.handleListClick}/>}
         </Grid>
       </Grid>
     )
   }
 }
+
+export default connect(mapStateToProps)(Widget)
