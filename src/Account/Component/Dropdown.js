@@ -1,22 +1,19 @@
 import React from 'react'
-import AccountService from '../Service'
 // @material-ui
 import MenuItem from '@material-ui/core/MenuItem'
 import Select from '@material-ui/core/Select'
+import { connect } from 'react-redux'
 
-export default class Dropdown extends React.Component {
+const mapStateToProps = state => ({
+  accounts: state.account.entities
+})
+
+class Dropdown extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
       value: props.value || '',
-      accounts: []
     }
-  }
-
-  componentDidMount () {
-    AccountService.retrieve().then(entities => {
-      this.setState({accounts: entities})
-    })
   }
 
   handleChange = (event) => {
@@ -25,7 +22,7 @@ export default class Dropdown extends React.Component {
   }
 
   render () {
-    let options = this.state.accounts.map(a => {
+    let options = this.props.accounts.map(a => {
       return <MenuItem key={a._id} value={a._id}>{a.name}</MenuItem>
     })
     return (
@@ -36,3 +33,5 @@ export default class Dropdown extends React.Component {
     )
   }
 }
+
+export default connect(mapStateToProps)(Dropdown)
